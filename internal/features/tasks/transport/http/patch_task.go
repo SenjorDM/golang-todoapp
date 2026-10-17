@@ -47,7 +47,7 @@ func (r *PatchTaskRequest) Validate() error {
 	return nil
 }
 
-type PatchUserResponse TaskDTOResponse
+type PatchTaskResponse TaskDTOResponse
 
 func (h *TasksHTTPHandler) PathTask(rw http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
@@ -86,7 +86,7 @@ func (h *TasksHTTPHandler) PathTask(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response := PatchUserResponse(taskDTOFromDomain(taskDomain))
+	response := PatchTaskResponse(taskDTOFromDomain(taskDomain))
 
 	responseHandler.JSONResponse(response, http.StatusOK)
 }
