@@ -1,0 +1,718 @@
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TodoApp — Workspace</title>
+<style>
+:root {
+  --bg:#f5f7fb; --surface:#fff; --text:#182230; --muted:#788497;
+  --line:#e8edf3; --primary:#6658e8; --primary-hover:#5547d4;
+  --green:#13865c; --green-bg:#e5f7ef; --red:#d44343; --red-bg:#fff0f0;
+  --shadow:0 8px 28px rgba(30,45,75,.055); --radius:16px;
+}
+* {box-sizing:border-box}
+body {
+  margin:0;background:var(--bg);color:var(--text);
+  font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+}
+button,input,textarea,select {font:inherit}
+button {cursor:pointer}
+button:disabled {opacity:.5;cursor:wait}
+.app {min-height:100vh;display:grid;grid-template-columns:240px minmax(0,1fr)}
+.sidebar {
+  background:#17182b;color:#fff;padding:26px 17px;
+  display:flex;flex-direction:column;gap:28px;
+}
+.brand {display:flex;align-items:center;gap:11px;padding:0 8px;font-size:19px;font-weight:750}
+.brand-icon {
+  display:grid;place-items:center;width:37px;height:37px;border-radius:12px;
+  background:linear-gradient(135deg,#887aff,#5747db);font-size:20px
+}
+.side-label {padding:0 10px;color:#8f92ad;font-size:11px;font-weight:700;letter-spacing:1.3px;text-transform:uppercase}
+.nav {display:grid;gap:6px}
+.nav button {
+  border:0;background:transparent;color:#b6b7ce;padding:12px 13px;
+  text-align:left;border-radius:10px;display:flex;align-items:center;gap:12px;
+  transition:.15s
+}
+.nav button:hover {background:#25263e;color:white}
+.nav button.active {background:#302c59;color:#fff}
+.nav .ico {width:21px;text-align:center;font-size:17px}
+.side-bottom {margin-top:auto;color:#999bb6;font-size:12px;padding:10px}
+.api-dot {display:inline-block;width:8px;height:8px;border-radius:50%;background:#f2b84b;margin-right:7px}
+.main {min-width:0;padding:30px clamp(18px,4vw,48px) 50px}
+.topbar {display:flex;justify-content:space-between;align-items:center;gap:15px;margin-bottom:28px}
+.eyebrow {color:var(--muted);font-size:12px;margin-bottom:4px}
+h1 {font-size:27px;letter-spacing:-.7px;margin:0;font-weight:750}
+h2 {font-size:17px;margin:0}
+.subtitle {color:var(--muted);margin-top:5px}
+.top-actions {display:flex;gap:9px;align-items:center}
+.btn {
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  border:1px solid var(--line);border-radius:10px;padding:10px 14px;
+  background:white;color:var(--text);font-weight:600;transition:.15s
+}
+.btn:hover {background:#f7f8fc}
+.btn-primary {background:var(--primary);color:white;border-color:var(--primary)}
+.btn-primary:hover {background:var(--primary-hover);color:white}
+.btn-danger {color:var(--red)}
+.btn-small {padding:6px 9px;font-size:12px;border-radius:8px}
+.btn-ghost {border-color:transparent;background:transparent;color:var(--muted)}
+.icon-btn {width:36px;height:36px;padding:0;font-size:16px}
+.cards {display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin-bottom:26px}
+.stat {
+  padding:20px;background:var(--surface);border:1px solid var(--line);
+  border-radius:var(--radius);box-shadow:var(--shadow);min-width:0
+}
+.stat-head {display:flex;align-items:center;justify-content:space-between;gap:8px;color:var(--muted);font-size:12px}
+.stat-icon {width:35px;height:35px;display:grid;place-items:center;border-radius:11px;font-size:17px}
+.purple {background:#efedff;color:#6556e8}
+.green {background:var(--green-bg);color:var(--green)}
+.orange {background:#fff3df;color:#b77916}
+.blue {background:#e8f3ff;color:#347cc3}
+.stat-value {font-size:29px;font-weight:750;letter-spacing:-1px;margin-top:13px}
+.stat-note {font-size:12px;color:var(--muted);margin-top:3px}
+.panel {background:white;border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
+.panel-head {padding:21px 23px;display:flex;justify-content:space-between;align-items:center;gap:15px;border-bottom:1px solid var(--line)}
+.panel-title {font-weight:700;font-size:16px}
+.panel-subtitle {font-size:12px;color:var(--muted);margin-top:3px}
+.filters {padding:15px 22px;display:flex;flex-wrap:wrap;gap:10px;border-bottom:1px solid var(--line)}
+.field {
+  width:100%;border:1px solid #dfe5ed;background:white;border-radius:9px;
+  padding:10px 12px;outline:none;color:var(--text);transition:.15s
+}
+.field:focus {border-color:#8b80f1;box-shadow:0 0 0 3px #6658e81a}
+.search {flex:1;min-width:180px;position:relative}
+.search input {padding-left:35px}
+.search span {position:absolute;left:12px;top:9px;color:var(--muted);font-size:17px}
+.filters select {width:auto;min-width:145px}
+.table-wrap {overflow-x:auto}
+table {width:100%;border-collapse:collapse;text-align:left}
+th {padding:12px 22px;background:#fafbfe;color:var(--muted);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;white-space:nowrap}
+td {padding:15px 22px;border-top:1px solid #f0f2f6;vertical-align:middle}
+tbody tr:hover {background:#fcfcff}
+.task-title {font-weight:650;max-width:300px;overflow-wrap:anywhere}
+.task-desc {font-size:12px;color:var(--muted);margin-top:4px;max-width:320px;overflow-wrap:anywhere}
+.badge {display:inline-flex;align-items:center;gap:6px;padding:5px 9px;border-radius:20px;font-size:11px;font-weight:650;white-space:nowrap}
+.badge:before {content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+.badge-done {color:var(--green);background:var(--green-bg)}
+.badge-open {color:#9a711c;background:#fff5df}
+.actions {display:flex;gap:5px;white-space:nowrap}
+.muted {color:var(--muted)}
+.empty {padding:45px 20px;text-align:center;color:var(--muted)}
+.empty-icon {font-size:31px;margin-bottom:9px}
+.empty strong {display:block;color:var(--text);font-size:15px;margin-bottom:4px}
+.panel-foot {padding:14px 22px;border-top:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:12px;color:var(--muted);font-size:12px}
+.pager {display:flex;gap:6px}
+.pager button {width:32px;height:32px;padding:0}
+.user-grid {padding:20px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}
+.user-card {border:1px solid var(--line);border-radius:13px;padding:17px;min-width:0}
+.user-top {display:flex;align-items:center;gap:12px}
+.avatar {width:43px;height:43px;flex-shrink:0;border-radius:13px;background:#eeecff;color:#5e50db;display:grid;place-items:center;font-weight:750;font-size:16px}
+.user-name {font-weight:700;overflow-wrap:anywhere}
+.user-meta {font-size:12px;color:var(--muted);overflow-wrap:anywhere}
+.user-actions {display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:15px;padding-top:12px;border-top:1px solid var(--line)}
+.notice {display:none;padding:12px 15px;border-radius:10px;margin-bottom:18px;white-space:pre-wrap;overflow-wrap:anywhere}
+.notice.show {display:block}
+.notice.error {background:var(--red-bg);color:#a52828;border:1px solid #ffd8d8}
+.notice.success {background:var(--green-bg);color:#116a4a;border:1px solid #c9efdf}
+.notice.info {background:#edf3ff;color:#3558a0;border:1px solid #d9e5ff}
+.loading {padding:28px;text-align:center;color:var(--muted)}
+.spinner {display:inline-block;width:14px;height:14px;border:2px solid #d9d5ff;border-top-color:var(--primary);border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:7px}
+@keyframes spin {to{transform:rotate(360deg)}}
+.view {display:none}.view.active {display:block}
+.dialog {border:0;padding:0;width:min(480px,calc(100% - 28px));border-radius:17px;box-shadow:0 25px 100px #1114}
+.dialog::backdrop {background:#11182777;backdrop-filter:blur(3px)}
+.dialog-head {padding:22px 23px 15px;display:flex;align-items:center;justify-content:space-between}
+.dialog-body {padding:0 23px 22px}
+.form-row {margin-top:14px}
+.form-row label {display:block;font-weight:650;font-size:12px;margin-bottom:6px}
+.form-help {color:var(--muted);font-size:11px;margin-top:5px}
+.dialog-actions {display:flex;justify-content:flex-end;gap:9px;margin-top:22px}
+.toast {position:fixed;right:22px;bottom:22px;max-width:min(400px,calc(100% - 44px));padding:13px 17px;background:#20213a;color:white;border-radius:12px;box-shadow:var(--shadow);z-index:10;display:none}
+.toast.show {display:block}
+@media(max-width:1050px) {
+  .cards {grid-template-columns:repeat(2,minmax(0,1fr))}
+  .app {grid-template-columns:205px minmax(0,1fr)}
+  .main {padding:25px 22px}
+}
+@media(max-width:720px) {
+  .app {display:block}
+  .sidebar {padding:14px;gap:13px}
+  .brand {padding:0 4px}
+  .side-label,.side-bottom {display:none}
+  .nav {display:flex;overflow-x:auto}
+  .nav button {flex-shrink:0;padding:10px}
+  .main {padding:20px 13px 35px}
+  .topbar {align-items:flex-start}
+  h1 {font-size:23px}
+  .top-actions {flex-wrap:wrap;justify-content:flex-end}
+  .top-actions .btn {padding:9px}
+  .cards {gap:10px}
+  .stat {padding:14px}
+  .stat-value {font-size:24px}
+  .panel-head {padding:17px}
+  .filters {padding:12px}
+  .user-grid {grid-template-columns:1fr;padding:12px}
+  td,th {padding:13px 14px}
+  .panel-foot {padding:12px 14px}
+}
+@media(max-width:390px) {
+  .cards {grid-template-columns:1fr 1fr}
+  .stat-head {align-items:flex-start}
+  .stat-icon {width:28px;height:28px}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand"><span class="brand-icon">✓</span> TodoApp</div>
+    <div class="side-label">Workspace</div>
+    <nav class="nav">
+      <button class="active" data-view="overview"><span class="ico">▦</span> Обзор</button>
+      <button data-view="tasks"><span class="ico">☷</span> Задачи</button>
+      <button data-view="users"><span class="ico">♙</span> Пользователи</button>
+    </nav>
+    <div class="side-bottom"><span class="api-dot" id="apiDot"></span><span id="apiLabel">Проверка API...</span><br><br>TodoApp Workspace<br>Go REST API</div>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <div>
+        <div class="eyebrow">WORKSPACE / <span id="crumb">OVERVIEW</span></div>
+        <h1 id="pageTitle">Обзор</h1>
+        <div class="subtitle" id="pageSubtitle">Все задачи и пользователи в одном месте.</div>
+      </div>
+      <div class="top-actions">
+        <button class="btn" id="refreshBtn">↻ Обновить</button>
+        <button class="btn btn-primary" id="mainCreateBtn">＋ Создать задачу</button>
+      </div>
+    </header>
+
+    <div class="notice" id="notice" role="status"></div>
+
+    <section class="view active" id="view-overview">
+      <div class="cards">
+        <div class="stat">
+          <div class="stat-head">Всего задач <span class="stat-icon purple">☷</span></div>
+          <div class="stat-value" id="statTotal">—</div>
+          <div class="stat-note">Загружено из API</div>
+        </div>
+        <div class="stat">
+          <div class="stat-head">Выполнено <span class="stat-icon green">✓</span></div>
+          <div class="stat-value" id="statDone">—</div>
+          <div class="stat-note" id="statRate">Доля выполненных задач</div>
+        </div>
+        <div class="stat">
+          <div class="stat-head">В работе <span class="stat-icon orange">◷</span></div>
+          <div class="stat-value" id="statOpen">—</div>
+          <div class="stat-note">Ожидают выполнения</div>
+        </div>
+        <div class="stat">
+          <div class="stat-head">Пользователи <span class="stat-icon blue">♙</span></div>
+          <div class="stat-value" id="statUsers">—</div>
+          <div class="stat-note">Всего пользователей</div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <div><div class="panel-title">Последние задачи</div><div class="panel-subtitle">Актуальный список из Go API</div></div>
+          <button class="btn btn-small" data-go="tasks">Все задачи →</button>
+        </div>
+        <div id="recentTasks"><div class="loading"><span class="spinner"></span>Загрузка...</div></div>
+      </div>
+    </section>
+
+    <section class="view" id="view-tasks">
+      <div class="panel">
+        <div class="panel-head">
+          <div><div class="panel-title">Все задачи</div><div class="panel-subtitle" id="taskCount">Загрузка списка...</div></div>
+          <button class="btn btn-primary" id="addTaskBtn">＋ Новая задача</button>
+        </div>
+        <div class="filters">
+          <div class="search"><span>⌕</span><input class="field" id="taskSearch" placeholder="Поиск по названию или описанию..."></div>
+          <select class="field" id="taskFilter">
+            <option value="all">Все статусы</option>
+            <option value="open">В работе</option>
+            <option value="done">Выполненные</option>
+          </select>
+          <select class="field" id="authorFilter"><option value="all">Все авторы</option></select>
+        </div>
+        <div id="taskTable"><div class="loading"><span class="spinner"></span>Загрузка задач...</div></div>
+      </div>
+    </section>
+
+    <section class="view" id="view-users">
+      <div class="panel">
+        <div class="panel-head">
+          <div><div class="panel-title">Пользователи</div><div class="panel-subtitle" id="userCount">Управление пользователями</div></div>
+          <button class="btn btn-primary" id="addUserBtn">＋ Новый пользователь</button>
+        </div>
+        <div class="filters">
+          <div class="search"><span>⌕</span><input class="field" id="userSearch" placeholder="Поиск по имени или телефону..."></div>
+        </div>
+        <div id="userGrid" class="user-grid"><div class="loading">Загрузка пользователей...</div></div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<dialog class="dialog" id="taskDialog">
+  <div class="dialog-head"><h2 id="taskDialogTitle">Новая задача</h2><button class="btn btn-ghost icon-btn" data-close="taskDialog">✕</button></div>
+  <form id="taskForm" class="dialog-body">
+    <input type="hidden" id="editTaskId">
+    <div class="form-row"><label for="taskTitle">Название *</label><input class="field" id="taskTitle" maxlength="100" required placeholder="Например, подготовить отчёт"></div>
+    <div class="form-row"><label for="taskDescription">Описание</label><textarea class="field" id="taskDescription" rows="3" maxlength="1000" placeholder="Что необходимо сделать?"></textarea></div>
+    <div class="form-row"><label for="taskAuthor">Автор задачи *</label><select class="field" id="taskAuthor" required><option value="">Выбери пользователя</option></select><div class="form-help">Автор должен существовать в базе данных.</div></div>
+    <div class="form-row" id="completedRow" hidden><label><input type="checkbox" id="taskCompleted"> Задача выполнена</label></div>
+    <div class="dialog-actions"><button type="button" class="btn" data-close="taskDialog">Отмена</button><button class="btn btn-primary" id="saveTaskBtn" type="submit">Создать задачу</button></div>
+  </form>
+</dialog>
+
+<dialog class="dialog" id="userDialog">
+  <div class="dialog-head"><h2>Новый пользователь</h2><button class="btn btn-ghost icon-btn" data-close="userDialog">✕</button></div>
+  <form id="userForm" class="dialog-body">
+    <div class="form-row"><label for="userName">Полное имя *</label><input class="field" id="userName" minlength="3" maxlength="100" required placeholder="Иван Иванов"></div>
+    <div class="form-row"><label for="userPhone">Телефон</label><input class="field" id="userPhone" maxlength="16" placeholder="+79991234567"><div class="form-help">Можно оставить пустым.</div></div>
+    <div class="dialog-actions"><button type="button" class="btn" data-close="userDialog">Отмена</button><button class="btn btn-primary" id="saveUserBtn" type="submit">Создать пользователя</button></div>
+  </form>
+</dialog>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(() => {
+  'use strict';
+
+  const API = 'http://127.0.0.1:5050/api/v1';
+  const $ = id => document.getElementById(id);
+  const state = {
+    tasks: [], users: [], activeView: 'overview',
+    taskPage: 1, pageSize: 8, busy: false
+  };
+
+  function escapeHTML(value) {
+    return String(value ?? '').replace(/[&<>"']/g, c => ({
+      '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'
+    })[c]);
+  }
+
+  function isDone(task) {
+    return Boolean(task.completed ?? task.comleted);
+  }
+
+  function errorMessage(data, fallback) {
+    if (data && typeof data === 'object') {
+      return data.message || data.error || data.detail || JSON.stringify(data);
+    }
+    return data ? String(data) : fallback;
+  }
+
+  async function api(path, options = {}) {
+    let response;
+    try {
+      response = await fetch(API + path, {
+        ...options,
+        headers: {
+          ...(options.body ? {'Content-Type':'application/json'} : {}),
+          ...options.headers
+        }
+      });
+    } catch (err) {
+      throw new Error('Не удалось соединиться с API. Проверь, что Go-сервер запущен на 127.0.0.1:5050, и что CORS разрешает запросы из браузера.');
+    }
+
+    const raw = await response.text();
+    let data = null;
+    if (raw) {
+      try { data = JSON.parse(raw); }
+      catch { data = raw; }
+    }
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${errorMessage(data, response.statusText)}`);
+    }
+    return data;
+  }
+
+  function notify(message, type = 'success') {
+    const box = $('notice');
+    box.textContent = message;
+    box.className = 'notice show ' + type;
+  }
+
+  function toast(message) {
+    const box = $('toast');
+    box.textContent = message;
+    box.classList.add('show');
+    clearTimeout(toast.timer);
+    toast.timer = setTimeout(() => box.classList.remove('show'), 2800);
+  }
+
+  function setBusy(value) {
+    state.busy = value;
+    $('refreshBtn').disabled = value;
+    $('refreshBtn').textContent = value ? 'Загрузка…' : '↻ Обновить';
+  }
+
+  function showView(name) {
+    state.activeView = name;
+    document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
+    $('view-' + name).classList.add('active');
+    document.querySelectorAll('.nav button').forEach(btn =>
+      btn.classList.toggle('active', btn.dataset.view === name)
+    );
+
+    const labels = {
+      overview: ['Обзор','OVERVIEW','Все задачи и пользователи в одном месте.'],
+      tasks: ['Задачи','TASKS','Создавай задачи, меняй статус и следи за прогрессом.'],
+      users: ['Пользователи','USERS','Управляй пользователями приложения.']
+    };
+    $('pageTitle').textContent = labels[name][0];
+    $('crumb').textContent = labels[name][1];
+    $('pageSubtitle').textContent = labels[name][2];
+    $('mainCreateBtn').textContent = name === 'users' ? '＋ Создать пользователя' : '＋ Создать задачу';
+  }
+
+  async function loadTasks() {
+    const data = await api('/tasks');
+    if (!Array.isArray(data)) throw new Error('GET /tasks должен возвращать массив задач.');
+    state.tasks = data;
+  }
+
+  async function loadUsers() {
+    const data = await api('/users');
+    if (!Array.isArray(data)) throw new Error('GET /users должен возвращать массив пользователей.');
+    state.users = data;
+  }
+
+  function renderStats() {
+    const done = state.tasks.filter(isDone).length;
+    const total = state.tasks.length;
+    $('statTotal').textContent = total;
+    $('statDone').textContent = done;
+    $('statOpen').textContent = total - done;
+    $('statUsers').textContent = state.users.length;
+    $('statRate').textContent = total ? Math.round(done / total * 100) + '% от всех задач' : 'Пока нет задач';
+  }
+
+  function taskRow(task) {
+    const done = isDone(task);
+    const author = state.users.find(user => Number(user.id) === Number(task.author_user_id));
+    return `<tr>
+      <td><div class="task-title">${escapeHTML(task.title)}</div>
+          <div class="task-desc">${escapeHTML(task.description || 'Без описания')}</div></td>
+      <td><span class="badge ${done ? 'badge-done' : 'badge-open'}">${done ? 'Выполнена' : 'В работе'}</span></td>
+      <td>${author ? escapeHTML(author.full_name) : '#' + escapeHTML(task.author_user_id ?? '—')}</td>
+      <td><div class="actions">
+        <button class="btn btn-small" data-toggle="${Number(task.id)}" data-done="${done}">${done ? '↶' : '✓'}</button>
+        <button class="btn btn-small" data-edit="${Number(task.id)}">Изменить</button>
+        <button class="btn btn-small btn-danger" data-delete-task="${Number(task.id)}" aria-label="Удалить">✕</button>
+      </div></td>
+    </tr>`;
+  }
+
+  function renderTaskTable() {
+    const query = $('taskSearch').value.trim().toLowerCase();
+    const filter = $('taskFilter').value;
+    const author = $('authorFilter').value;
+
+    const filtered = state.tasks.filter(task => {
+      const matchText = [task.title, task.description].some(v => String(v || '').toLowerCase().includes(query));
+      const done = isDone(task);
+      const matchStatus = filter === 'all' || (filter === 'done' ? done : !done);
+      const matchAuthor = author === 'all' || String(task.author_user_id) === author;
+      return matchText && matchStatus && matchAuthor;
+    }).sort((a,b) => Number(b.id) - Number(a.id));
+
+    const pages = Math.max(1, Math.ceil(filtered.length / state.pageSize));
+    state.taskPage = Math.min(state.taskPage, pages);
+    const start = (state.taskPage - 1) * state.pageSize;
+    const visible = filtered.slice(start, start + state.pageSize);
+
+    $('taskCount').textContent = `${filtered.length} ${plural(filtered.length, 'задача', 'задачи', 'задач')}`;
+    $('taskTable').innerHTML = filtered.length ? `
+      <div class="table-wrap"><table>
+        <thead><tr><th>Задача</th><th>Статус</th><th>Автор</th><th>Действия</th></tr></thead>
+        <tbody>${visible.map(taskRow).join('')}</tbody>
+      </table></div>
+      <div class="panel-foot"><span>Показано ${start + 1}–${Math.min(start + visible.length, filtered.length)} из ${filtered.length}</span>
+      <div class="pager">
+        <button class="btn btn-small" data-page="${state.taskPage - 1}" ${state.taskPage <= 1 ? 'disabled' : ''}>‹</button>
+        <span style="padding:7px">${state.taskPage} / ${pages}</span>
+        <button class="btn btn-small" data-page="${state.taskPage + 1}" ${state.taskPage >= pages ? 'disabled' : ''}>›</button>
+      </div></div>` :
+      `<div class="empty"><div class="empty-icon">☷</div><strong>Задачи не найдены</strong>Попробуй изменить фильтры или создай задачу.</div>`;
+  }
+
+  function renderRecent() {
+    const tasks = [...state.tasks].sort((a,b) => Number(b.id) - Number(a.id)).slice(0,5);
+    $('recentTasks').innerHTML = tasks.length ? `
+      <div class="table-wrap"><table>
+      <thead><tr><th>Задача</th><th>Статус</th><th>Автор</th><th></th></tr></thead>
+      <tbody>${tasks.map(task => {
+        const author = state.users.find(u => Number(u.id) === Number(task.author_user_id));
+        return `<tr>
+          <td><div class="task-title">${escapeHTML(task.title)}</div><div class="task-desc">${escapeHTML(task.description || 'Без описания')}</div></td>
+          <td><span class="badge ${isDone(task) ? 'badge-done':'badge-open'}">${isDone(task) ? 'Выполнена':'В работе'}</span></td>
+          <td>${escapeHTML(author?.full_name || '#' + (task.author_user_id ?? '—'))}</td>
+          <td><button class="btn btn-small" data-edit="${Number(task.id)}">Открыть</button></td>
+        </tr>`;
+      }).join('')}</tbody></table></div>` :
+      `<div class="empty"><div class="empty-icon">✦</div><strong>Начни с первой задачи</strong>Создай задачу — она появится здесь.</div>`;
+  }
+
+  function renderUsers() {
+    const query = $('userSearch').value.trim().toLowerCase();
+    const users = state.users.filter(user =>
+      [user.full_name, user.phone_number, user.id].some(v => String(v ?? '').toLowerCase().includes(query))
+    );
+    $('userCount').textContent = `${users.length} из ${state.users.length} пользователей`;
+    $('userGrid').innerHTML = users.length ? users.map(user => {
+      const initials = String(user.full_name || '?').trim().split(/\s+/).slice(0,2).map(w => w[0] || '').join('').toUpperCase();
+      const count = state.tasks.filter(task => Number(task.author_user_id) === Number(user.id)).length;
+      return `<article class="user-card">
+        <div class="user-top">
+          <div class="avatar">${escapeHTML(initials)}</div>
+          <div style="min-width:0"><div class="user-name">${escapeHTML(user.full_name)}</div>
+          <div class="user-meta">ID: ${escapeHTML(user.id)} · ${escapeHTML(user.phone_number || 'Телефон не указан')}</div></div>
+        </div>
+        <div class="user-actions"><span class="muted">${count} ${plural(count,'задача','задачи','задач')}</span>
+          <button class="btn btn-small btn-danger" data-delete-user="${Number(user.id)}">Удалить</button>
+        </div>
+      </article>`;
+    }).join('') : `<div class="empty" style="grid-column:1/-1"><div class="empty-icon">♙</div><strong>Пользователи не найдены</strong>Попробуй изменить запрос.</div>`;
+  }
+
+  function renderAuthorOptions() {
+    const filter = $('authorFilter');
+    const previous = filter.value || 'all';
+    filter.innerHTML = '<option value="all">Все авторы</option>' + state.users.map(u =>
+      `<option value="${Number(u.id)}">${escapeHTML(u.full_name)} (#${Number(u.id)})</option>`
+    ).join('');
+    filter.value = [...filter.options].some(o => o.value === previous) ? previous : 'all';
+
+    const select = $('taskAuthor');
+    const taskPrevious = select.value;
+    select.innerHTML = '<option value="">Выбери пользователя</option>' + state.users.map(u =>
+      `<option value="${Number(u.id)}">${escapeHTML(u.full_name)} (#${Number(u.id)})</option>`
+    ).join('');
+    if ([...select.options].some(o => o.value === taskPrevious)) select.value = taskPrevious;
+  }
+
+  function plural(n, one, few, many) {
+    const x = Math.abs(n) % 100;
+    const last = x % 10;
+    if (x > 10 && x < 20) return many;
+    if (last > 1 && last < 5) return few;
+    if (last === 1) return one;
+    return many;
+  }
+
+  async function refresh(silent = false) {
+    if (state.busy) return;
+    setBusy(true);
+    if (!silent) notify('Загружаю данные из Go API…', 'info');
+
+    try {
+      // Each endpoint is loaded independently so one failure doesn't hide the other.
+      const results = await Promise.allSettled([loadUsers(), loadTasks()]);
+      const errors = [];
+      if (results[0].status === 'rejected') errors.push('Пользователи: ' + results[0].reason.message);
+      if (results[1].status === 'rejected') errors.push('Задачи: ' + results[1].reason.message);
+
+      $('apiDot').style.background = errors.length ? '#f2b84b' : '#42d39b';
+      $('apiLabel').textContent = errors.length ? 'Есть ошибки API' : 'API подключён';
+      renderAuthorOptions();
+      renderStats();
+      renderTaskTable();
+      renderRecent();
+      renderUsers();
+
+      if (errors.length) {
+        notify(errors.join('\n'), 'error');
+      } else {
+        $('notice').className = 'notice';
+        if (!silent) toast('Данные обновлены');
+      }
+    } catch (err) {
+      $('apiDot').style.background = '#ef6262';
+      $('apiLabel').textContent = 'Нет связи с API';
+      notify(err.message, 'error');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  function openTaskDialog(task = null) {
+    if (!state.users.length && !task) {
+      notify('Сначала создай пользователя — он будет автором задачи.', 'info');
+      showView('users');
+      return;
+    }
+    $('taskForm').reset();
+    $('editTaskId').value = task ? task.id : '';
+    $('taskDialogTitle').textContent = task ? 'Редактировать задачу' : 'Новая задача';
+    $('saveTaskBtn').textContent = task ? 'Сохранить изменения' : 'Создать задачу';
+    $('taskTitle').value = task?.title || '';
+    $('taskDescription').value = task?.description || '';
+    $('taskAuthor').value = task ? String(task.author_user_id) : '';
+    $('taskAuthor').disabled = Boolean(task);
+    $('completedRow').hidden = !task;
+    $('taskCompleted').checked = task ? isDone(task) : false;
+    $('taskDialog').showModal();
+  }
+
+  function openUserDialog() {
+    $('userForm').reset();
+    $('userDialog').showModal();
+  }
+
+  document.querySelectorAll('[data-view]').forEach(btn => btn.addEventListener('click', () => showView(btn.dataset.view)));
+  document.querySelectorAll('[data-go]').forEach(btn => btn.addEventListener('click', () => showView(btn.dataset.go)));
+  $('refreshBtn').addEventListener('click', () => refresh());
+  $('mainCreateBtn').addEventListener('click', () => state.activeView === 'users' ? openUserDialog() : openTaskDialog());
+  $('addTaskBtn').addEventListener('click', () => openTaskDialog());
+  $('addUserBtn').addEventListener('click', openUserDialog);
+
+  $('taskSearch').addEventListener('input', () => { state.taskPage = 1; renderTaskTable(); });
+  $('taskFilter').addEventListener('change', () => { state.taskPage = 1; renderTaskTable(); });
+  $('authorFilter').addEventListener('change', () => { state.taskPage = 1; renderTaskTable(); });
+  $('userSearch').addEventListener('input', renderUsers);
+
+  document.querySelectorAll('[data-close]').forEach(btn =>
+    btn.addEventListener('click', () => $(btn.dataset.close).close())
+  );
+
+  $('taskForm').addEventListener('submit', async event => {
+    event.preventDefault();
+    const id = $('editTaskId').value;
+    const title = $('taskTitle').value.trim();
+    const description = $('taskDescription').value.trim();
+    const body = id
+      ? { title, description: description || null, completed: $('taskCompleted').checked }
+      : { title, description: description || null, author_user_id: Number($('taskAuthor').value) };
+
+    const save = $('saveTaskBtn');
+    save.disabled = true;
+    save.textContent = 'Сохранение…';
+
+    try {
+      await api(id ? '/tasks/' + encodeURIComponent(id) : '/tasks', {
+        method: id ? 'PATCH' : 'POST',
+        body: JSON.stringify(body)
+      });
+      $('taskDialog').close();
+      await refresh(true);
+      notify(id ? 'Изменения задачи сохранены.' : 'Задача создана.', 'success');
+    } catch (err) {
+      notify('Не удалось сохранить задачу: ' + err.message, 'error');
+    } finally {
+      save.disabled = false;
+      save.textContent = id ? 'Сохранить изменения' : 'Создать задачу';
+    }
+  });
+
+  $('userForm').addEventListener('submit', async event => {
+    event.preventDefault();
+    const save = $('saveUserBtn');
+    save.disabled = true;
+    save.textContent = 'Создание…';
+    try {
+      const phone = $('userPhone').value.trim();
+      await api('/users', {
+        method: 'POST',
+        body: JSON.stringify({
+          full_name: $('userName').value.trim(),
+          phone_number: phone || null
+        })
+      });
+      $('userDialog').close();
+      await refresh(true);
+      notify('Пользователь успешно создан.', 'success');
+    } catch (err) {
+      notify('Не удалось создать пользователя: ' + err.message, 'error');
+    } finally {
+      save.disabled = false;
+      save.textContent = 'Создать пользователя';
+    }
+  });
+
+  document.addEventListener('click', async event => {
+    const button = event.target.closest('button');
+    if (!button || button.disabled) return;
+
+    if (button.dataset.page) {
+      state.taskPage = Number(button.dataset.page);
+      renderTaskTable();
+      return;
+    }
+
+    if (button.dataset.edit) {
+      const task = state.tasks.find(t => Number(t.id) === Number(button.dataset.edit));
+      if (task) openTaskDialog(task);
+      return;
+    }
+
+    if (button.dataset.toggle) {
+      const id = button.dataset.toggle;
+      const task = state.tasks.find(t => Number(t.id) === Number(id));
+      if (!task) return;
+      button.disabled = true;
+      try {
+        await api('/tasks/' + encodeURIComponent(id), {
+          method: 'PATCH',
+          body: JSON.stringify({completed: !isDone(task)})
+        });
+        await refresh(true);
+        toast('Статус задачи обновлён');
+      } catch (err) {
+        notify('Не удалось изменить статус: ' + err.message, 'error');
+      } finally {
+        button.disabled = false;
+      }
+      return;
+    }
+
+    if (button.dataset['delete-task']) {
+      const id = button.dataset['delete-task'];
+      if (!confirm(`Удалить задачу #${id}? Это действие нельзя отменить.`)) return;
+      button.disabled = true;
+      try {
+        await api('/tasks/' + encodeURIComponent(id), {method:'DELETE'});
+        await refresh(true);
+        notify('Задача удалена.', 'success');
+      } catch (err) {
+        notify('Не удалось удалить задачу: ' + err.message, 'error');
+      } finally {
+        button.disabled = false;
+      }
+      return;
+    }
+
+    if (button.dataset['delete-user']) {
+      const id = button.dataset['delete-user'];
+      const user = state.users.find(u => Number(u.id) === Number(id));
+      if (!confirm(`Удалить пользователя «${user?.full_name || id}»? Если у него есть задачи, API может запретить удаление.`)) return;
+      button.disabled = true;
+      try {
+        await api('/users/' + encodeURIComponent(id), {method:'DELETE'});
+        await refresh(true);
+        notify('Пользователь удалён.', 'success');
+      } catch (err) {
+        notify('Не удалось удалить пользователя: ' + err.message, 'error');
+      } finally {
+        button.disabled = false;
+      }
+    }
+  });
+
+  refresh();
+})();
+</script>
+</body>
+</html>
